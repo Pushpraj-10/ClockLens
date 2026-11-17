@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClockEvent",
+  "type": "object",
+  "required": ["id", "process", "seq", "kind", "lamport", "vector"],
+  "properties": {
+    "id": { "type": "string" },
+    "process": { "type": "string" },
+    "seq": { "type": "integer", "minimum": 0 },
+    "kind": { "enum": ["local", "send", "receive"] },
+    "lamport": { "type": "integer", "minimum": 0 },
+    "vector": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 } },
+    "peer": { "type": "string" },
+    "msgId": { "type": "string" },
+    "label": { "type": "string" },
+    "wallTime": { "type": "number" }
+  },
+  "additionalProperties": false
+}

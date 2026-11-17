@@ -1,0 +1,10 @@
+{
+  "name": "@clocklens/simulator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": { "test": "vitest run --passWithNoTests", "typecheck": "tsc --noEmit" },
+  "dependencies": { "@clocklens/clock": "workspace:*", "@clocklens/events": "workspace:*" }
+}

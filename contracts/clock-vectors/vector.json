@@ -1,0 +1,15 @@
+{
+  "description": "Process 'a' in system [a,b,c]; expect = vector after each op.",
+  "self": "a",
+  "cases": [
+    { "name": "local ticks", "ops": [{"op":"tick"}], "expect": [{"a":1,"b":0,"c":0}] },
+    { "name": "receive merges then ticks",
+      "ops": [{"op":"tick"},{"op":"receive","value":{"a":0,"b":3,"c":1}}],
+      "expect": [{"a":1,"b":0,"c":0},{"a":2,"b":3,"c":1}] }
+  ],
+  "compare": [
+    { "x": {"a":1,"b":0}, "y": {"a":2,"b":1}, "expect": "before" },
+    { "x": {"a":2,"b":0}, "y": {"a":0,"b":2}, "expect": "concurrent" },
+    { "x": {"a":1,"b":1}, "y": {"a":1,"b":1}, "expect": "equal" }
+  ]
+}

@@ -1,0 +1,20 @@
+# One command: docker compose up
+services:
+  collector:
+    build: { context: ., dockerfile: deploy/go.Dockerfile, args: { CMD: collector } }
+    ports: ["8080:8080"]
+    volumes: ["./data:/data"]
+  node-1: &node
+    build: { context: ., dockerfile: deploy/go.Dockerfile, args: { CMD: node } }
+    environment: { NODE_ID: P1, PEERS: "P2:9000,P3:9000", COLLECTOR: "collector:8080" }
+    depends_on: [collector]
+  node-2:
+    <<: *node
+    environment: { NODE_ID: P2, PEERS: "P1:9000,P3:9000", COLLECTOR: "collector:8080" }
+  node-3:
+    <<: *node
+    environment: { NODE_ID: P3, PEERS: "P1:9000,P2:9000", COLLECTOR: "collector:8080" }
+  web:
+    build: { context: ., dockerfile: deploy/web.Dockerfile }
+    ports: ["3000:3000"]
+    environment: { NEXT_PUBLIC_COLLECTOR_WS: "ws://localhost:8080/stream" }

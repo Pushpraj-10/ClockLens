@@ -1,0 +1,24 @@
+{
+  "name": "@clocklens/web",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "echo no web tests yet"
+  },
+  "dependencies": {
+    "@clocklens/clock": "workspace:*",
+    "@clocklens/events": "workspace:*",
+    "@clocklens/simulator": "workspace:*",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0"
+  }
+}
