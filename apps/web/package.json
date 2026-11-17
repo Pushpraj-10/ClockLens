@@ -10,9 +10,7 @@
     "test": "echo no web tests yet"
   },
   "dependencies": {
-    "@clocklens/clock": "workspace:*",
     "@clocklens/events": "workspace:*",
-    "@clocklens/simulator": "workspace:*",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

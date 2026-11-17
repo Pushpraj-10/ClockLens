@@ -1,20 +1,28 @@
 # One command: docker compose up
 services:
-  collector:
-    build: { context: ., dockerfile: deploy/go.Dockerfile, args: { CMD: collector } }
+  nats:
+    image: nats:2          # core pub/sub only; do not enable JetStream
+    ports: ["4222:4222"]
+
+  server:
+    build: { context: ., dockerfile: deploy/go.Dockerfile, args: { CMD: server } }
+    environment: { NATS_URL: "nats://nats:4222", HTTP_ADDR: ":8080" }
     ports: ["8080:8080"]
-    volumes: ["./data:/data"]
+    depends_on: [nats]
+
   node-1: &node
     build: { context: ., dockerfile: deploy/go.Dockerfile, args: { CMD: node } }
-    environment: { NODE_ID: P1, PEERS: "P2:9000,P3:9000", COLLECTOR: "collector:8080" }
-    depends_on: [collector]
+    environment: { NODE_ID: P1, NATS_URL: "nats://nats:4222" }
+    depends_on: [nats]
   node-2:
     <<: *node
-    environment: { NODE_ID: P2, PEERS: "P1:9000,P3:9000", COLLECTOR: "collector:8080" }
+    environment: { NODE_ID: P2, NATS_URL: "nats://nats:4222" }
   node-3:
     <<: *node
-    environment: { NODE_ID: P3, PEERS: "P1:9000,P2:9000", COLLECTOR: "collector:8080" }
+    environment: { NODE_ID: P3, NATS_URL: "nats://nats:4222" }
+
   web:
     build: { context: ., dockerfile: deploy/web.Dockerfile }
     ports: ["3000:3000"]
-    environment: { NEXT_PUBLIC_COLLECTOR_WS: "ws://localhost:8080/stream" }
+    environment: { NEXT_PUBLIC_API_URL: "http://localhost:8080" }
+    depends_on: [server]

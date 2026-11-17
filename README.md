@@ -1,18 +1,19 @@
 # ClockLens
 
-Interactive Lamport vs vector clock visualizer with a simulator and a live Go system.
+Interactive Lamport vs vector clock visualizer. You drive real Go nodes from the UI
+and watch the events and their causality on a space-time diagram.
 
 | Path | Responsibility |
 |---|---|
-| `contracts/` | Event schema + shared clock test vectors |
-| `packages/clock` | TS Lamport/vector clocks |
-| `packages/events` | TS event types / validation |
-| `packages/simulator` | Script -> events (browser, no backend) |
-| `apps/web` | Next.js UI: diagram, playback, highlighting, comparison |
-| `go/pkg/{clock,events}` | Go clocks + event struct |
-| `go/cmd/node`, `internal/node` | Real processes exchanging gRPC messages |
-| `go/cmd/collector`, `internal/collector` | Event ingest, file persistence, WebSocket stream |
-| `go/cmd/faultproxy` | Optional delay/drop/reorder/partition proxy |
-| `deploy/`, `docker-compose.yml` | `docker compose up` |
+| `contracts/` | Event schema + clock test vectors (source of truth) |
+| `apps/web` | Next.js viewer: controls, diagram, playback, causality, comparison |
+| `packages/events` | TS `ClockEvent` types (to be generated from the schema) |
+| `go/pkg/clock` | Lamport + vector clocks, `Compare` |
+| `go/pkg/events` | Go `ClockEvent` struct |
+| `go/pkg/protocol` | NATS subjects, messages, control commands, status |
+| `go/internal/server/*` | Central server: api, run, orchestrator, hub, store, causality |
+| `go/internal/node` | Node: clocks, inbox buffer, delivery mode, partition |
+| `go/cmd/server`, `go/cmd/node` | The two Go binaries |
+| `deploy/`, `docker-compose.yml` | `docker compose up`: nats, server, 3 nodes, web |
 
-Dev: `pnpm install && pnpm dev` · Tests: `make test` · Design: `docs/architecture.md`
+Dev: `pnpm install && pnpm dev` · Go tests: `make test-go` · Design: `docs/architecture.md`

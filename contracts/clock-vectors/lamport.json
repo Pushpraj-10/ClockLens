@@ -3,6 +3,7 @@
   "cases": [
     { "name": "local ticks", "ops": [{"op":"tick"},{"op":"tick"}], "expect": [1,2] },
     { "name": "receive takes max+1", "ops": [{"op":"tick"},{"op":"receive","value":5}], "expect": [1,6] },
+    { "name": "receive of equal value still advances", "ops": [{"op":"tick"},{"op":"receive","value":1}], "expect": [1,2] },
     { "name": "receive of smaller value", "ops": [{"op":"tick"},{"op":"tick"},{"op":"receive","value":1}], "expect": [1,2,3] }
   ]
 }
