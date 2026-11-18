@@ -91,6 +91,8 @@ go/
     clock/                     Lamport, vector, Compare
     events/                    ClockEvent struct
     protocol/                  NATS subjects, AppMessage, control commands, status
+    bus/                       Bus interface; NATS implementation and an in-memory one for tests
+  e2e/                         tests running nodes + server together on the in-memory bus
   internal/
     server/{api,run,orchestrator,hub,store,causality}
     node/                      node behaviour, inbox buffer, delivery mode, NATS transport
@@ -107,7 +109,7 @@ apps/web ──(REST/WS)──▶ cmd/server ──▶ internal/server/* ──�
                         cmd/node   ──▶ internal/node     ──▶ pkg/{clock,events,protocol}
 ```
 
-- `internal/server` and `internal/node` never import each other; they share only `pkg/*` and talk over NATS.
+- `internal/server` and `internal/node` never import each other; they share only `pkg/*` (clock, events, protocol, bus) and talk over NATS. Only `e2e/` imports both, for tests.
 - `pkg/*` imports nothing from `internal/*`.
 - Wall-clock time is informational only.
 
