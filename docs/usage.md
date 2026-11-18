@@ -14,21 +14,7 @@ A tour of the interface. For the ideas behind it, read [concepts.md](concepts.md
 
 ## The screen
 
-```
-┌──────────────┬────────────────────────────────────────────────────┐
-│ ClockLens  ◐ │  Title                              [Simple|Advanced]│
-│ [New run]    │ ┌────────────────────────────────────────────────┐ │
-│              │ │ Space-time diagram         stats   [How to read]│ │
-│ P1           │ │  P1  ▢──▢──────▢                               │ │
-│ [Local][↗P2] │ │  P2  ▢────▢──▢                                 │ │
-│ [↗P3]        │ │  P3  ▢──────────▢                              │ │
-│ P2 …         │ └────────────────────────────────────────────────┘ │
-│ P3 …         │  ⏮ ◀ ▶ Play ▶ ──────●────────  6 / 6      ● Live  │
-│              │ ┌─────────────────┐ ┌──────────────────────────┐  │
-│              │ │ What just       │ │ Selected event / Compare │  │
-│              │ │ happened        │ │ / Lamport vs vector      │  │
-└──────────────┴─┴─────────────────┴─┴──────────────────────────┴──┘
-```
+![The ClockLens interface in the Advanced view: node controls on the left, the space-time diagram, the playback bar and the detail panels](images/advanced-dark.png)
 
 - **Left panel:** the run actions, one control card per node, and the theme menu (the round
   button beside the logo). If the server cannot be reached, the action buttons are disabled.
@@ -39,6 +25,8 @@ A tour of the interface. For the ideas behind it, read [concepts.md](concepts.md
 ## Simple and Advanced views
 
 Switch with the toggle at the top right. The choice is remembered in your browser.
+
+![The Simple view in the light theme: plain-English explanations, no clock numbers except the Lamport badge](images/simple-light.png)
 
 | | Simple | Advanced |
 |---|---|---|
@@ -54,6 +42,8 @@ Switch with the toggle at the top right. The choice is remembered in your browse
 ## Driving the nodes
 
 Each node has a card in the left panel.
+
+![The left panel in the Advanced view: P2 in manual delivery mode with a held message and its Network options expanded](images/node-controls-dark.png)
 
 - **Local** — something happens inside the node. No message is sent.
 - **↗ P2** — the node sends a message to P2 (one button per other node).
@@ -111,9 +101,13 @@ In Advanced view, three tabs sit in the card at the bottom right:
   or `concurrent`), a numbered proof comparing the vectors entry by entry, a note on whether
   Lamport agrees, and — when one event is before the other — the chain of events and
   messages connecting them.
+
+  ![The Compare tab showing two concurrent events, a numbered vector-clock proof and a note that Lamport misleads](images/compare-dark.png)
 - **Lamport vs vector** — every pair of concurrent events whose Lamport values differ. For each,
   Lamport suggests an order that does not exist. **Compare** jumps to the proof. The number on
   the tab counts these pairs.
+
+  ![The Lamport vs vector tab listing concurrent event pairs that Lamport numbers appear to order](images/lamport-vs-vector-dark.png)
 
 In Simple view, selecting an event shows one sentence ("3 events happened before this one…")
 and, if Lamport would mislead about it, a note with a link to switch to Advanced.
@@ -146,6 +140,12 @@ In Advanced view the **Run** section has **Export** and **Import**.
   if there are events you would lose.
 
 An imported trace is a read-only view: the nodes' own clocks are not changed.
+
+## On a phone
+
+Below the `lg` breakpoint the node controls move above the diagram and the layout becomes a single column. The diagram scrolls sideways inside its card.
+
+![ClockLens on a phone-width screen, Simple view, light theme](images/mobile-light.png)
 
 ## Keyboard and accessibility
 

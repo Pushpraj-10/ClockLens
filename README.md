@@ -11,6 +11,14 @@ independent of it, and find out exactly where Lamport timestamps would mislead y
 Nothing here is scripted or simulated. Every event comes from a real node process that
 keeps its own clocks and talks to the others over NATS.
 
+![ClockLens Simple view in the light theme: a selected event with its before, after and independent events outlined on the diagram](docs/images/simple-light.png)
+
+*Simple view (light theme): click an event to see what came before it, after it, and independently of it.*
+
+![ClockLens Advanced view in the dark theme: vector clocks on every card, a held message waiting for delivery, and the selected event's details](docs/images/advanced-dark.png)
+
+*Advanced view (dark theme): vector clocks on every card, manual message delivery, and detailed causality panels.*
+
 ## Features
 
 - **Real nodes.** Each node is its own Go process with its own Lamport and vector clock.
