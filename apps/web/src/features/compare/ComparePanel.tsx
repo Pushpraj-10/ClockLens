@@ -1,6 +1,6 @@
 "use client";
 
-import type { Comparison } from "@clocklens/events";
+import type { Comparison, Order } from "@clocklens/events";
 import type { Remote } from "../../lib/useRemote";
 
 interface Props {
@@ -26,72 +26,71 @@ function headline(c: Comparison): string {
   }
 }
 
+const BADGE: Record<Order, string> = {
+  before: "text-ok",
+  after: "text-ok",
+  concurrent: "text-warn",
+  equal: "text-muted",
+};
+
 /** Pick two events; the server says how they relate and shows its proof. */
 export function ComparePanel({ options, a, b, selectedId, onChange, result }: Props) {
   const c = result.data;
+  const choose = (letter: "A" | "B", label: string, value: string | undefined, set: (v: string | undefined) => void) => (
+    <label className="flex items-center gap-2">
+      <span className="text-[13px] font-semibold text-muted">{letter}</span>
+      <select className="field" aria-label={label} value={value ?? ""} onChange={(e) => set(e.target.value || undefined)}>
+        <option value="">choose…</option>
+        {options.map((id) => (
+          <option key={id} value={id}>
+            {id}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+
   return (
     <section className="panel">
-      <h2>Compare two events</h2>
-      <div className="row">
-        <label className="row">
-          <span className="label">A</span>
-          <select aria-label="First event" value={a ?? ""} onChange={(e) => onChange(e.target.value || undefined, b)}>
-            <option value="">choose…</option>
-            {options.map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="row">
-          <span className="label">B</span>
-          <select aria-label="Second event" value={b ?? ""} onChange={(e) => onChange(a, e.target.value || undefined)}>
-            <option value="">choose…</option>
-            {options.map((id) => (
-              <option key={id} value={id}>
-                {id}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button disabled={!selectedId} onClick={() => onChange(selectedId, b)} title="Use the selected event as A">
+      <h2 className="section-title">Compare two events</h2>
+      <div className="flex flex-wrap items-center gap-2">
+        {choose("A", "First event", a, (v) => onChange(v, b))}
+        {choose("B", "Second event", b, (v) => onChange(a, v))}
+        <button className="btn" disabled={!selectedId} onClick={() => onChange(selectedId, b)} title="Use the selected event as A">
           Selected → A
         </button>
-        <button disabled={!selectedId} onClick={() => onChange(a, selectedId)} title="Use the selected event as B">
+        <button className="btn" disabled={!selectedId} onClick={() => onChange(a, selectedId)} title="Use the selected event as B">
           Selected → B
         </button>
-        <button disabled={!a && !b} onClick={() => onChange(b, a)}>
+        <button className="btn" disabled={!a && !b} onClick={() => onChange(b, a)}>
           Swap
         </button>
       </div>
 
       {!a || !b ? (
-        <p className="muted" style={{ marginTop: 10 }}>
+        <p className="mt-2.5 text-muted">
           Choose two events (or select one in the diagram and shift-click another) to see whether one happened before the other.
         </p>
       ) : result.error ? (
-        <p className="error" role="alert">
+        <p className="mt-2 text-sm text-bad" role="alert">
           {result.error}
         </p>
       ) : !c ? (
-        <p className="muted" style={{ marginTop: 10 }}>
-          Asking the server…
-        </p>
+        <p className="mt-2.5 text-muted">Asking the server…</p>
       ) : (
         <div aria-live="polite">
-          <div className="verdict">
-            <span className={`badge ${c.relation}`}>{c.relation === "equal" ? "same" : c.relation}</span>
+          <div className="my-2.5 flex flex-wrap items-center gap-2.5" data-testid="verdict">
+            <span className={`badge ${BADGE[c.relation]}`}>{c.relation === "equal" ? "same" : c.relation}</span>
             <strong>{headline(c)}</strong>
           </div>
-          <ol className="proof">
+          <ol className="m-0 flex list-decimal flex-col gap-1 pl-5 marker:text-muted">
             {c.proof.map((line, i) => (
               <li key={i}>{line}</li>
             ))}
           </ol>
           {c.path && c.path.length > 1 && (
-            <p className="path">
-              Causal chain: {c.path.join(" → ")} <span className="muted">(program order and messages)</span>
+            <p className="mt-2 font-mono">
+              Causal chain: {c.path.join(" → ")} <span className="font-sans text-muted">(program order and messages)</span>
             </p>
           )}
         </div>
