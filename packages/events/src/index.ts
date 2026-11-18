@@ -1,3 +1,5 @@
+export * from "./protocol";
+
 // Event format types — mirror contracts/event.schema.json.
 export type EventKind = "local" | "send" | "receive";
 

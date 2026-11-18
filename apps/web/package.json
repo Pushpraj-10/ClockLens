@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "echo no web tests yet"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@clocklens/events": "workspace:*",
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0"
+    "@types/react": "^19.0.0",
+    "vitest": "^2.1.0"
   }
 }
