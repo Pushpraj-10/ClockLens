@@ -7,7 +7,7 @@ import "sync"
 //	Tick (local event or send): t = t + 1
 //	Receive(remote):            t = max(t, remote) + 1
 //
-// Mirrors packages/clock/src/lamport.ts; both pass contracts/clock-vectors/lamport.json.
+// The behaviour is pinned by the shared test cases in contracts/clock-vectors/lamport.json.
 type Lamport struct {
 	mu sync.Mutex
 	t  uint64

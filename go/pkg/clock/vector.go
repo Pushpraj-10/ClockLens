@@ -70,7 +70,7 @@ func AreConcurrent(x, y Vector) bool { return Compare(x, y) == Concurrent }
 //	Tick (local event or send): v[self]++
 //	Receive(remote):            v = elementwise max(v, remote); v[self]++
 //
-// Mirrors packages/clock/src/vector.ts; both pass contracts/clock-vectors/vector.json.
+// The behaviour is pinned by the shared test cases in contracts/clock-vectors/vector.json.
 type VectorClock struct {
 	mu   sync.Mutex
 	self string
