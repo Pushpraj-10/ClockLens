@@ -1,5 +1,6 @@
 import type { ClockEvent, Relations } from "@clocklens/events";
 import { relationSentence } from "../../lib/plain";
+import { Swatch } from "../shell/Swatch";
 
 interface Props {
   event?: ClockEvent;
@@ -31,18 +32,18 @@ export function PlainSummary({ event, relations, error, visibleIds, lamportNote,
           )}
           {ready && <p className="mt-1.5">{relationSentence(relations, visibleIds)}</p>}
           <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted">
-            <span>
-              <span className="swatch swatch-past" /> before
+            <span className="inline-flex items-center gap-1.5">
+              <Swatch rel="past" /> before
             </span>
-            <span>
-              <span className="swatch swatch-future" /> after
+            <span className="inline-flex items-center gap-1.5">
+              <Swatch rel="future" /> after
             </span>
-            <span>
-              <span className="swatch swatch-concurrent" /> independent
+            <span className="inline-flex items-center gap-1.5">
+              <Swatch rel="concurrent" /> independent
             </span>
           </p>
           {lamportNote && (
-            <p className="mt-3 border-l-4 border-warn py-1 pl-2.5" role="status">
+            <p className="mt-3 rounded-r-xl border-l-4 border-warn bg-warn/10 py-2 pr-3 pl-3" role="status">
               {lamportNote}{" "}
               <button type="button" className="font-semibold underline underline-offset-2" onClick={onShowAdvanced}>
                 Switch to Advanced to see why

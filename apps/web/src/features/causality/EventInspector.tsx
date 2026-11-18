@@ -1,4 +1,5 @@
 import type { ClockEvent, Relations } from "@clocklens/events";
+import { Swatch, type Relation } from "../shell/Swatch";
 
 interface Props {
   event?: ClockEvent;
@@ -10,35 +11,32 @@ interface Props {
   visibleIds: Set<string>;
 }
 
-const dt = "text-muted";
+const dt = "text-[13px] text-muted";
 
 /** Details of the selected event and what is before, after and concurrent with it. */
 export function EventInspector({ event, lanes, relations, error, visibleIds }: Props) {
-  const list = (ids: string[]) => {
-    const shown = ids.filter((id) => visibleIds.has(id));
-    return shown.length ? shown.join(", ") : "none";
-  };
   const ready = event && relations?.id === event.id;
+  const shown = (ids: string[]) => ids.filter((id) => visibleIds.has(id));
 
   return (
-    <section className="panel">
-      <h2 className="section-title">Selected event</h2>
+    <div>
       {!event ? (
         <p className="text-muted">Click an event in the diagram to inspect it and highlight its past, future and concurrent events.</p>
       ) : (
         <>
-          <dl className="m-0 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1">
+          <dl className="m-0 grid grid-cols-[max-content_1fr] items-center gap-x-4 gap-y-1.5">
             <dt className={dt}>Event</dt>
             <dd className="m-0">
-              {event.id} ({event.kind})
+              <span className="chip">{event.id}</span> <span className="text-muted">{event.kind}</span>
             </dd>
             <dt className={dt}>Lamport</dt>
-            <dd className="m-0 font-mono">{event.lamport}</dd>
+            <dd className="m-0 font-mono font-semibold">{event.lamport}</dd>
             <dt className={dt}>Vector</dt>
-            <dd className="m-0">
+            <dd className="m-0 flex flex-wrap gap-1">
               {lanes.map((p) => (
-                <span key={p} className="mr-2.5 inline-block font-mono">
-                  {p}: {event.vector[p] ?? 0}
+                <span key={p} className="chip gap-1">
+                  <span className="text-muted">{p}</span>
+                  {event.vector[p] ?? 0}
                 </span>
               ))}
             </dd>
@@ -46,7 +44,7 @@ export function EventInspector({ event, lanes, relations, error, visibleIds }: P
               <>
                 <dt className={dt}>{event.kind === "send" ? "Sent to" : "Received from"}</dt>
                 <dd className="m-0">
-                  {event.peer} ({event.msgId})
+                  {event.peer} <span className="text-muted">via</span> <span className="chip">{event.msgId}</span>
                 </dd>
               </>
             )}
@@ -57,25 +55,28 @@ export function EventInspector({ event, lanes, relations, error, visibleIds }: P
             </p>
           )}
           {ready && (
-            <dl className="mt-2.5 grid gap-1.5" data-testid="relation-lists">
-              <Group swatch="swatch-past" title="Happened before" ids={list(relations.past)} />
-              <Group swatch="swatch-future" title="Happens after" ids={list(relations.future)} />
-              <Group swatch="swatch-concurrent" title="Independent (concurrent)" ids={list(relations.concurrent)} />
+            <dl className="mt-4 grid gap-3 border-t border-line pt-3.5" data-testid="relation-lists">
+              <Group rel="past" title="Happened before" ids={shown(relations.past)} />
+              <Group rel="future" title="Happens after" ids={shown(relations.future)} />
+              <Group rel="concurrent" title="Independent (concurrent)" ids={shown(relations.concurrent)} />
             </dl>
           )}
         </>
       )}
-    </section>
+    </div>
   );
 }
 
-function Group({ swatch, title, ids }: { swatch: string; title: string; ids: string }) {
+function Group({ rel, title, ids }: { rel: Relation; title: string; ids: string[] }) {
   return (
     <div>
-      <dt className="font-semibold">
-        <span className={`swatch ${swatch}`} /> {title}
+      <dt className="mb-1 flex items-center gap-2 text-sm font-semibold">
+        <Swatch rel={rel} /> {title}
+        <span className="font-mono text-xs font-normal text-muted tabular-nums">{ids.length}</span>
       </dt>
-      <dd className="m-0 font-mono text-[13px]">{ids}</dd>
+      <dd className="m-0 flex flex-wrap gap-1">
+        {ids.length ? ids.map((id) => <span key={id} className="chip">{id}</span>) : <span className="text-[13px] text-muted">none</span>}
+      </dd>
     </div>
   );
 }

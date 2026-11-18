@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { parseTheme, resolveTheme, THEME_KEY, type ResolvedTheme, type ThemeChoice } from "./themeCore";
 
-const BROWSER_BAR: Record<ResolvedTheme, string> = { light: "#efeff1", dark: "#09080b" };
+const BROWSER_BAR: Record<ResolvedTheme, string> = { light: "#efeff1", dark: "#0a0a0b" };
 
 /**
  * System / Light / Dark, remembered in this browser. With "system" it follows the OS

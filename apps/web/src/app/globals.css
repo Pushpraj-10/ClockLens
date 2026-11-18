@@ -2,7 +2,7 @@
 
 /*
  * Design tokens.
- *   Dark  = Helios + Radix: near-black, mauve glass glow, grey chrome, mauve primary.
+ *   Dark  = neutral near-black and grey; orange is used only for primary / accent highlights.
  *   Light = Finexy: warm off-white, white rounded cards, orange accent, black pill buttons.
  * Roles (one job each):
  *   primary  = selected pills and main buttons
@@ -13,6 +13,10 @@
 :root {
   /* native controls (checkboxes, selects, scrollbars) follow the theme */
   color-scheme: light;
+
+  /* dropdown chevrons (used as masks, so only the shape matters) */
+  --chevron-down: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  --chevron-up: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 15l6-6 6 6'/%3E%3C/svg%3E");
 
   --bg: #efeff1;
   --panel: #ffffff;
@@ -50,33 +54,32 @@
  */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #09080b;
-  --panel: #121016;
-  --surface-2: #19151e;
-  --text: #f3eff5;
-  --muted: #a39cae;
+  --bg: #0a0a0b;
+  --panel: #131315;
+  --surface-2: #1b1b1e;
+  --text: #f3f3f4;
+  --muted: #a0a0a8;
   --line: rgba(255, 255, 255, 0.09);
-  --primary: #d6a1d0;
-  --primary-ink: #1a0f19;
-  --accent: #e9b8e3;
-  --accent-text: #1a0f19;
+  --primary: #f08a3c;
+  --primary-ink: #1c0e03;
+  --accent: #ffa14f;
+  --accent-text: #1c0e03;
   --info: #86adff;
   --ok: #3ecf8e;
   --bad: #ff6b6b;
   --warn: #f0b45a;
-  --arrow: #9a93a5;
-  --dot-text: #0d0a10;
+  --arrow: #9b9ba3;
+  --dot-text: #0b0b0c;
   --lane-band: rgba(255, 255, 255, 0.025);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.9);
-  --bg-glow: radial-gradient(900px 480px at 88% -14%, rgba(214, 161, 208, 0.1), transparent 70%),
-    radial-gradient(700px 420px at -6% 110%, rgba(214, 161, 208, 0.06), transparent 70%);
-  /* soft mauve glass glow in the card corner, kept away from text areas */
-  --card-glow: radial-gradient(420px 220px at 100% 0%, rgba(214, 161, 208, 0.1), transparent 70%);
+  /* neutral, barely-there light so black surfaces keep some depth; colour is left to the accents */
+  --bg-glow: radial-gradient(900px 480px at 88% -14%, rgba(255, 255, 255, 0.04), transparent 70%);
+  --card-glow: radial-gradient(420px 220px at 100% 0%, rgba(255, 255, 255, 0.035), transparent 70%);
   --p0: #86adff;
   --p1: #ff9d5c;
   --p2: #4fd1a5;
   --p3: #d59bff;
-  --p4: #ff8fb4;
+  --p4: #e8c547;
   --p5: #b5d65a;
 }
 
@@ -152,14 +155,22 @@
     appearance: base-select;
   }
   select.field {
+    align-items: center;
     gap: 0.5rem;
   }
+  /* Real chevron-down / chevron-up shapes (swapped, not rotated), drawn as a mask so they take the text colour. */
   select.field::picker-icon {
-    color: var(--muted);
-    transition: rotate 0.15s;
+    content: "";
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--muted);
+    -webkit-mask: var(--chevron-down) center / contain no-repeat;
+    mask: var(--chevron-down) center / contain no-repeat;
   }
   select.field:open::picker-icon {
-    rotate: 180deg;
+    -webkit-mask-image: var(--chevron-up);
+    mask-image: var(--chevron-up);
+    background-color: var(--text);
   }
   select.field::picker(select) {
     margin-top: 6px;
@@ -206,11 +217,22 @@
     @apply mb-3 flex items-center gap-2 text-[13px] font-semibold tracking-wide text-muted;
   }
   .btn {
-    @apply touch-manipulation inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-medium text-ink no-underline transition-colors duration-100;
+    @apply touch-manipulation inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-line bg-surface px-4 py-1.5 text-sm font-medium whitespace-nowrap text-ink no-underline transition-colors duration-100;
     @apply hover:not-disabled:border-primary active:not-disabled:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply border-primary bg-primary text-primary-ink;
+    @apply border-primary bg-primary text-primary-ink hover:not-disabled:opacity-90;
+  }
+  .btn-sm {
+    @apply min-h-8 px-2.5 py-1 text-[13px];
+  }
+  /* segmented control: a row of .btn sharing borders; the pressed one is filled */
+  .seg {
+    @apply inline-flex;
+  }
+  .seg > .btn {
+    @apply rounded-none first:rounded-l-full last:rounded-r-full [&:not(:first-child)]:-ml-px;
+    @apply hover:z-[1] aria-pressed:z-[2] aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-ink;
   }
   .field {
     @apply min-h-10 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm text-ink disabled:cursor-not-allowed disabled:opacity-50;
@@ -218,21 +240,22 @@
   .badge {
     @apply inline-flex items-center gap-1.5 rounded-full border border-current px-2.5 py-0.5 text-xs font-semibold;
   }
+  /* an event id or clock value, set in mono */
+  .chip {
+    @apply inline-flex items-center rounded-md border border-line bg-surface px-1.5 font-mono text-[12px] leading-5 whitespace-nowrap text-ink;
+  }
   .tile {
     @apply flex flex-col gap-1 rounded-card border border-line bg-panel p-4 shadow-panel;
     background-image: var(--card-glow);
   }
-  /* legend swatches use shape (solid / dashed / dotted) as well as color */
-  .swatch {
-    @apply inline-block size-3.5 rounded-full align-middle;
-  }
-  .swatch-past {
-    @apply border-4 border-solid border-ok;
-  }
-  .swatch-future {
-    @apply border-4 border-dashed border-info;
-  }
-  .swatch-concurrent {
-    @apply border-4 border-dotted border-warn;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -59,8 +59,7 @@ export function ControlPanel({ nodes, statuses, connected, advanced, hasEvents }
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <section className="panel p-4">
-        <h2 className="section-title">Run</h2>
+      <section className="panel p-3" aria-label="Run">
         {confirm ? (
           <div role="alertdialog" aria-label="Confirm" className="flex flex-col gap-2">
             <p className="text-sm">
@@ -68,9 +67,9 @@ export function ControlPanel({ nodes, statuses, connected, advanced, hasEvents }
                 ? "Clear every event and reset all clocks?"
                 : "Importing replaces the events you have now. Continue?"}
             </p>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
-                className="btn btn-primary"
+                className="btn btn-sm btn-primary"
                 autoFocus
                 onClick={() => {
                   const what = confirm;
@@ -81,22 +80,27 @@ export function ControlPanel({ nodes, statuses, connected, advanced, hasEvents }
               >
                 {confirm === "new-run" ? "Yes, clear it" : "Choose a file…"}
               </button>
-              <button className="btn" onClick={() => setConfirm(undefined)}>
+              <button className="btn btn-sm" onClick={() => setConfirm(undefined)}>
                 Cancel
               </button>
             </div>
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="btn" onClick={startNewRun} disabled={!connected} title="Start over: clear all events and reset every node">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              className="btn btn-sm flex-1"
+              onClick={startNewRun}
+              disabled={!connected}
+              title="Start over: clear all events and reset every node"
+            >
               New run
             </button>
             {advanced && (
               <>
-                <a className="btn" href={exportUrl} download="clocklens-trace.json">
+                <a className="btn btn-sm flex-1" href={exportUrl} download="clocklens-trace.json" title="Download this run as JSON">
                   Export
                 </a>
-                <button className="btn" onClick={startImport} disabled={!connected}>
+                <button className="btn btn-sm flex-1" onClick={startImport} disabled={!connected} title="Load a run from a JSON file">
                   Import
                 </button>
               </>
@@ -158,52 +162,89 @@ function NodeCard({ id, color, status, others, disabled, advanced, act, setCut }
   const networkTweaked = mode === "manual" || cut.size > 0;
 
   return (
-    <section className="panel flex flex-col gap-3 p-4">
-      <h2 className="flex items-center gap-2 text-base font-semibold">
-        <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: color }} />
-        <span style={{ color }}>{id}</span>
-      </h2>
+    <section className="panel flex flex-col gap-2.5 p-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+          <span aria-hidden="true" className="size-2.5 rounded-full" style={{ background: color }} />
+          <span style={{ color }}>{id}</span>
+        </h2>
+        <span className="flex flex-wrap justify-end gap-1">
+          {!status && <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium text-muted">offline</span>}
+          {mode === "manual" && (
+            <span className="rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-semibold text-warn" title="Messages wait for you to deliver them">
+              manual
+            </span>
+          )}
+          {cut.size > 0 && (
+            <span className="rounded-full bg-bad/15 px-2 py-0.5 text-[11px] font-semibold text-bad" title={`Disconnected from ${[...cut].join(", ")}`}>
+              cut off
+            </span>
+          )}
+        </span>
+      </div>
 
-      <div className="flex flex-col gap-2">
+      {/* one row: a local event, then one send button per peer (same glyphs as the diagram cards) */}
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Actions for ${id}`}>
         <button
-          className="btn w-full"
+          className="btn btn-sm flex-1 gap-1.5"
           disabled={disabled}
           title={`Something happens inside ${id}. No message is sent.`}
+          aria-label={`Local event on ${id}`}
           onClick={() => act(() => sendCommand(id, { type: "local" }))}
         >
-          Local event
+          <svg viewBox="-6 -6 12 12" className="size-3" aria-hidden="true">
+            <circle r="3" fill="currentColor" />
+          </svg>
+          Local
         </button>
-        {others.length > 0 && (
-          <div className="flex flex-wrap gap-2" role="group" aria-label={`Send a message from ${id}`}>
-            {others.map((o) => (
-              <button
-                key={o}
-                className="btn flex-1"
-                disabled={disabled}
-                title={`${id} sends a message to ${o}`}
-                onClick={() => act(() => sendCommand(id, { type: "send", to: o }))}
-              >
-                Send to {o}
-              </button>
-            ))}
-          </div>
-        )}
+        {others.map((o) => (
+          <button
+            key={o}
+            className="btn btn-sm flex-1 gap-1"
+            disabled={disabled}
+            title={`${id} sends a message to ${o}`}
+            aria-label={`Send a message from ${id} to ${o}`}
+            onClick={() => act(() => sendCommand(id, { type: "send", to: o }))}
+          >
+            <svg viewBox="-6 -6 12 12" className="size-3" aria-hidden="true">
+              <path d="M-4,4 L4,-4 M-1,-4 L4,-4 L4,1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {o}
+          </button>
+        ))}
       </div>
 
       {pending.length > 0 && (
         <div>
-          <p className={`${labelCls} mb-1.5`}>Waiting messages</p>
-          <ul className="m-0 flex list-none flex-col gap-1.5 rounded-2xl border border-dashed border-line p-2.5" aria-label={`Messages held by ${id}`}>
+          <p className={`${labelCls} mb-1.5 flex items-center gap-1.5`}>
+            Waiting messages
+            <span className="rounded-full bg-warn/15 px-1.5 font-mono text-[11px] font-semibold text-warn tabular-nums">{pending.length}</span>
+          </p>
+          <ul className="m-0 flex list-none flex-col rounded-2xl border border-dashed border-warn/50 bg-warn/5 p-0" aria-label={`Messages held by ${id}`}>
             {pending.map((m) => (
-              <li key={m.msgId} className="flex flex-wrap items-center justify-between gap-2">
-                <span>
-                  <code>{m.msgId}</code> from {m.from}
+              <li
+                key={m.msgId}
+                className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-b border-dashed border-warn/30 px-2.5 py-2 last:border-b-0"
+              >
+                <span className="flex items-center gap-1.5 text-sm whitespace-nowrap">
+                  <span className="chip">{m.msgId}</span>
+                  <span className="text-muted">from {m.from}</span>
                 </span>
-                <span className="flex flex-wrap items-center gap-2">
-                  <button className="btn" disabled={disabled} onClick={() => act(() => sendCommand(id, { type: "deliver", msgId: m.msgId }))}>
+                <span className="ml-auto flex flex-none items-center gap-1">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    disabled={disabled}
+                    aria-label={`Deliver ${m.msgId}`}
+                    onClick={() => act(() => sendCommand(id, { type: "deliver", msgId: m.msgId }))}
+                  >
                     Deliver
                   </button>
-                  <button className="btn" disabled={disabled} onClick={() => act(() => sendCommand(id, { type: "drop", msgId: m.msgId }))}>
+                  <button
+                    className="btn btn-sm"
+                    disabled={disabled}
+                    aria-label={`Drop ${m.msgId}`}
+                    onClick={() => act(() => sendCommand(id, { type: "drop", msgId: m.msgId }))}
+                  >
                     Drop
                   </button>
                 </span>
@@ -218,21 +259,27 @@ function NodeCard({ id, color, status, others, disabled, advanced, act, setCut }
       )}
 
       {advanced && (
-        <details className="group rounded-2xl border border-line bg-surface px-3 py-2">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium">
-            <span>
+        <details className="group rounded-2xl border border-line bg-surface px-3 py-1.5">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-[13px] font-medium">
+            <span className="flex items-center gap-2">
               Network
-              {networkTweaked && <span className="ml-2 rounded-full bg-warn/20 px-2 py-0.5 text-xs text-warn">changed</span>}
+              {networkTweaked && <span className="rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-semibold text-warn">changed</span>}
             </span>
-            <span aria-hidden="true" className="text-muted transition-transform group-open:rotate-180">
-              ▾
-            </span>
+            {/* a down chevron when closed, a separate up chevron when open (not one icon rotated) */}
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="size-4 flex-none fill-none stroke-current stroke-[2.5] text-muted [stroke-linecap:round] [stroke-linejoin:round]"
+            >
+              <path className="group-open:hidden" d="M6 9l6 6 6-6" />
+              <path className="hidden group-open:block" d="M6 15l6-6 6 6" />
+            </svg>
           </summary>
 
           <div className="mt-3 flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <span className={labelCls}>Deliver messages</span>
-              <div className="inline-flex" role="group" aria-label={`Delivery mode of ${id}`}>
+              <div className="seg" role="group" aria-label={`Delivery mode of ${id}`}>
                 {(
                   [
                     ["auto", "Instantly", "Messages arrive as soon as they are sent"],
@@ -245,7 +292,7 @@ function NodeCard({ id, color, status, others, disabled, advanced, act, setCut }
                     disabled={disabled}
                     onClick={() => act(() => sendCommand(id, { type: "set_mode", mode: m }))}
                     title={hint}
-                    className="btn min-h-8 first:rounded-r-none last:rounded-l-none last:border-l-0 aria-pressed:border-primary aria-pressed:bg-primary aria-pressed:text-primary-ink"
+                    className="btn btn-sm"
                   >
                     {label}
                   </button>

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ClockEvent, Relations } from "@clocklens/events";
 import { laneColor } from "../../lib/colors";
 import { formatVector } from "../../lib/explain";
 import type { Layout } from "../../lib/layout";
+import { Swatch } from "../shell/Swatch";
 
 // Node-graph geometry: every event is a card with an input port (left) and an output port (right).
 const CARD_W = 164;
@@ -12,7 +13,9 @@ const CARD_H_FULL = 70;
 const CARD_H_COMPACT = 50;
 const BAND_H = 42;
 const COL_W = 212;
-const LANE_H = 128;
+// lane height leaves ~30px between cards of neighbouring nodes for the message curves
+const LANE_H_FULL = 100;
+const LANE_H_COMPACT = 82;
 const LEFT = 28;
 const TOP = 14;
 const PORT_R = 5;
@@ -78,11 +81,13 @@ export function SpaceTimeDiagram({
 }: Props) {
   const { lanes, order, column, columns, messages } = layout;
   const CARD_H = showVectors ? CARD_H_FULL : CARD_H_COMPACT;
+  const LANE_H = showVectors ? LANE_H_FULL : LANE_H_COMPACT;
   // the header band is the whole card in the simple view, the top part when the vector row is shown
   const bandH = showVectors ? BAND_H : CARD_H;
   const shown = useMemo(() => new Set(order.slice(0, visible).map((e) => e.id)), [order, visible]);
   const current = visible > 0 ? order[visible - 1] : undefined;
   const scroller = useRef<HTMLDivElement>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   const relOf = useMemo(() => {
     const m = new Map<string, Rel>();
@@ -115,7 +120,12 @@ export function SpaceTimeDiagram({
   }, [follow, visible]);
 
   if (lanes.length === 0) {
-    return <div className="px-4 py-8 text-center text-muted">Waiting for nodes to connect…</div>;
+    return (
+      <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line px-4 py-12 text-center text-muted">
+        <span aria-hidden="true" className="size-2 animate-pulse rounded-full bg-muted" />
+        Waiting for nodes to connect…
+      </div>
+    );
   }
 
   return (
@@ -139,7 +149,18 @@ export function SpaceTimeDiagram({
           ))}
         </div>
 
-        <div className="relative min-w-0 flex-1 overflow-x-auto" ref={scroller}>
+        {/* soft edge where cards slide under the lane labels */}
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-y-0 left-[76px] z-[5] w-10 bg-gradient-to-r from-panel to-transparent transition-opacity ${
+            scrolled ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <div
+          className="relative min-w-0 flex-1 overflow-x-auto"
+          ref={scroller}
+          onScroll={(ev) => setScrolled(ev.currentTarget.scrollLeft > 4)}
+        >
           {/* select-none: shift-click (compare) would otherwise range-select the labels */}
           {/* min-w-full: the canvas always fills the window; it only grows (and scrolls) when events need more room */}
           <svg className="block min-w-full select-none" width={width} height={height} role="img" aria-label="Space-time diagram of events">
@@ -341,29 +362,32 @@ export function SpaceTimeDiagram({
             })}
           </svg>
           {visible === 0 && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-muted">
-              Nothing has happened yet. Press Local event or a Send button on a node to begin.
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+              <p className="max-w-sm rounded-2xl border border-line bg-panel/90 px-4 py-3 text-center text-sm text-muted shadow-panel backdrop-blur-sm">
+                Nothing has happened yet. Press <strong className="text-ink">Local event</strong> or a{" "}
+                <strong className="text-ink">Send</strong> button on a node to begin.
+              </p>
             </div>
           )}
         </div>
       </div>
 
       {selectedId && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted" aria-label="Highlight key">
-          <span className="swatch swatch-past" /> before the selected event <span className="swatch swatch-future" /> after it{" "}
-          <span className="swatch swatch-concurrent" /> independent of it (neither could have caused the other).
-          {showVectors && " Shift-click another event to compare it with the selected one."}
-        </p>
-      )}
-      {showVectors ? (
-        <p className="mt-2 text-[13px] text-muted">
-          <strong>L</strong> = Lamport clock. <code>[…]</code> = vector clock (order {lanes.join(", ")}). Grey links follow a node&apos;s own
-          order; bold links are messages. Horizontal position keeps links pointing forward — it is not time.
-        </p>
-      ) : (
-        <p className="mt-2 text-[13px] text-muted">
-          Each card is something that happened on a node. Grey lines follow a node&apos;s own steps; bold arrows are messages. Sideways
-          position just keeps arrows pointing forward — it is not time.
+        <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-muted" aria-label="Highlight key">
+          <span className="inline-flex items-center gap-1.5">
+            <Swatch rel="past" /> before the selected event
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Swatch rel="future" /> after it
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <Swatch rel="concurrent" /> independent of it
+          </span>
+          {showVectors && (
+            <span>
+              <kbd className="chip text-[11px]">Shift</kbd>-click another event to compare.
+            </span>
+          )}
         </p>
       )}
     </div>

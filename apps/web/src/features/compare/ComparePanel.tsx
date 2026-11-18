@@ -51,20 +51,21 @@ export function ComparePanel({ options, a, b, selectedId, onChange, result }: Pr
   );
 
   return (
-    <section className="panel">
-      <h2 className="section-title">Compare two events</h2>
+    <div>
       <div className="flex flex-wrap items-center gap-2">
         {choose("A", "First event", a, (v) => onChange(v, b))}
         {choose("B", "Second event", b, (v) => onChange(a, v))}
-        <button className="btn" disabled={!selectedId} onClick={() => onChange(selectedId, b)} title="Use the selected event as A">
-          Selected → A
-        </button>
-        <button className="btn" disabled={!selectedId} onClick={() => onChange(a, selectedId)} title="Use the selected event as B">
-          Selected → B
-        </button>
-        <button className="btn" disabled={!a && !b} onClick={() => onChange(b, a)}>
-          Swap
-        </button>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <button className="btn btn-sm" disabled={!selectedId} onClick={() => onChange(selectedId, b)} title="Use the selected event as A">
+            Selected → A
+          </button>
+          <button className="btn btn-sm" disabled={!selectedId} onClick={() => onChange(a, selectedId)} title="Use the selected event as B">
+            Selected → B
+          </button>
+          <button className="btn btn-sm" disabled={!a && !b} onClick={() => onChange(b, a)} title="Swap A and B">
+            ⇄ Swap
+          </button>
+        </span>
       </div>
 
       {!a || !b ? (
@@ -89,12 +90,24 @@ export function ComparePanel({ options, a, b, selectedId, onChange, result }: Pr
             ))}
           </ol>
           {c.path && c.path.length > 1 && (
-            <p className="mt-2 font-mono">
-              Causal chain: {c.path.join(" → ")} <span className="font-sans text-muted">(program order and messages)</span>
-            </p>
+            <div className="mt-3 border-t border-line pt-3">
+              <p className="mb-1.5 text-[13px] text-muted">Causal chain (program order and messages)</p>
+              <p className="flex flex-wrap items-center gap-1">
+                {c.path.map((id, i) => (
+                  <span key={`${id}-${i}`} className="inline-flex items-center gap-1">
+                    {i > 0 && (
+                      <span aria-hidden="true" className="text-muted">
+                        →
+                      </span>
+                    )}
+                    <span className="chip">{id}</span>
+                  </span>
+                ))}
+              </p>
+            </div>
           )}
         </div>
       )}
-    </section>
+    </div>
   );
 }
