@@ -36,6 +36,7 @@ func MakeID(process string, seq uint64) string {
 
 // Validate checks the structural rules of the event schema.
 func (e ClockEvent) Validate() error {
+	// Required fields.
 	switch {
 	case e.ID == "":
 		return errors.New("event: empty id")
@@ -44,6 +45,8 @@ func (e ClockEvent) Validate() error {
 	case e.Vector == nil:
 		return errors.New("event: missing vector")
 	}
+
+	// A send or receive must name its peer and the message it belongs to.
 	switch e.Kind {
 	case Local:
 	case Send, Receive:
@@ -53,5 +56,6 @@ func (e ClockEvent) Validate() error {
 	default:
 		return fmt.Errorf("event %s: unknown kind %q", e.ID, e.Kind)
 	}
+
 	return nil
 }

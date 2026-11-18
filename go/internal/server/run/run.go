@@ -25,7 +25,9 @@ func (m *Manager) Resync(settle time.Duration) error {
 	if err := m.orch.Discover(); err != nil {
 		return err
 	}
+
 	time.Sleep(settle)
+
 	return m.NewRun()
 }
 
@@ -35,5 +37,6 @@ func (m *Manager) Resync(settle time.Duration) error {
 // can arrive after the clear and appear at the start of the new run.
 func (m *Manager) NewRun() error {
 	m.hub.Reset()
+
 	return m.orch.ResetAll()
 }

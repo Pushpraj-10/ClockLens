@@ -36,6 +36,7 @@ type Comparison struct {
 	LamportSays     string   `json:"lamportSays"`     // "before", "after" or "tie"
 	LamportMisleads bool     `json:"lamportMisleads"` // Lamport implies an order the events do not have
 	Proof           []string `json:"proof"`
+
 	// Path is a chain of events linked by program order and messages, from the earlier
 	// to the later event, when one is causally before the other.
 	Path []string `json:"path,omitempty"`
@@ -56,11 +57,14 @@ func Relate(evs []events.ClockEvent, id string) (Relations, error) {
 	if !ok {
 		return Relations{}, fmt.Errorf("%w: %q", ErrUnknownEvent, id)
 	}
+
 	r := Relations{ID: id, Past: []string{}, Future: []string{}, Concurrent: []string{}}
+
 	for _, e := range evs {
 		if e.ID == id {
 			continue
 		}
+
 		switch clock.Compare(e.Vector, target.Vector) {
 		case clock.Before:
 			r.Past = append(r.Past, e.ID)
@@ -70,6 +74,7 @@ func Relate(evs []events.ClockEvent, id string) (Relations, error) {
 			r.Concurrent = append(r.Concurrent, e.ID)
 		}
 	}
+
 	return r, nil
 }
 
@@ -79,15 +84,18 @@ func Compare(evs []events.ClockEvent, a, b string) (Comparison, error) {
 	if !ok {
 		return Comparison{}, fmt.Errorf("%w: %q", ErrUnknownEvent, a)
 	}
+
 	eb, ok := find(evs, b)
 	if !ok {
 		return Comparison{}, fmt.Errorf("%w: %q", ErrUnknownEvent, b)
 	}
 
+	// The verdict comes from the vector clocks alone.
 	rel := clock.Compare(ea.Vector, eb.Vector)
 	if a == b {
 		rel = clock.Equal
 	}
+
 	c := Comparison{
 		A: a, B: b, Relation: rel,
 		LamportA: ea.Lamport, LamportB: eb.Lamport,
@@ -96,13 +104,16 @@ func Compare(evs []events.ClockEvent, a, b string) (Comparison, error) {
 	c.LamportMisleads = lamportMisleads(rel, ea.Lamport, eb.Lamport)
 	c.Proof = proof(ea, eb, rel)
 
+	// When one event is causally first, show the chain that connects them.
 	switch rel {
 	case clock.Before:
 		c.Path = path(evs, a, b)
 	case clock.After:
 		c.Path = path(evs, b, a)
 	}
+
 	c.Proof = append(c.Proof, lamportNote(c)...)
+
 	return c, nil
 }
 
@@ -110,39 +121,51 @@ func Compare(evs []events.ClockEvent, a, b string) (Comparison, error) {
 // by (lamport, id) for stable output.
 func MisleadingPairs(evs []events.ClockEvent) []Misleading {
 	out := []Misleading{}
+
 	for i := range evs {
 		for j := i + 1; j < len(evs); j++ {
 			x, y := evs[i], evs[j]
+
 			if x.Lamport == y.Lamport || !clock.AreConcurrent(x.Vector, y.Vector) {
 				continue
 			}
+
+			// Keep the lower Lamport value first.
 			if x.Lamport > y.Lamport {
 				x, y = y, x
 			}
+
 			out = append(out, Misleading{A: x.ID, B: y.ID, LamportA: x.Lamport, LamportB: y.Lamport})
 		}
 	}
+
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].LamportA != out[j].LamportA {
 			return out[i].LamportA < out[j].LamportA
 		}
+
 		if out[i].A != out[j].A {
 			return out[i].A < out[j].A
 		}
+
 		return out[i].B < out[j].B
 	})
+
 	return out
 }
 
+// find returns the event with the given id.
 func find(evs []events.ClockEvent, id string) (events.ClockEvent, bool) {
 	for _, e := range evs {
 		if e.ID == id {
 			return e, true
 		}
 	}
+
 	return events.ClockEvent{}, false
 }
 
+// lamportSays is what the two Lamport values alone would claim: "before", "after" or "tie".
 func lamportSays(a, b uint64) string {
 	switch {
 	case a < b:
@@ -159,6 +182,7 @@ func lamportSays(a, b uint64) string {
 // does not order the same way (impossible for a correct clock, but checked anyway).
 func lamportMisleads(rel clock.Order, a, b uint64) bool {
 	says := lamportSays(a, b)
+
 	switch rel {
 	case clock.Concurrent:
 		return says != "tie"
@@ -167,45 +191,62 @@ func lamportMisleads(rel clock.Order, a, b uint64) bool {
 	case clock.After:
 		return says != "after"
 	}
+
 	return false
 }
 
+// processes returns the sorted union of the process ids in both vectors.
 func processes(a, b clock.Vector) []string {
 	set := map[string]struct{}{}
+
 	for p := range a {
 		set[p] = struct{}{}
 	}
+
 	for p := range b {
 		set[p] = struct{}{}
 	}
+
 	out := make([]string, 0, len(set))
 	for p := range set {
 		out = append(out, p)
 	}
+
 	sort.Strings(out)
+
 	return out
 }
 
+// proof explains, step by step, why a and b are related the way rel says.
 func proof(a, b events.ClockEvent, rel clock.Order) []string {
 	if a.ID == b.ID {
 		return []string{fmt.Sprintf("%s and %s are the same event.", a.ID, b.ID)}
 	}
+
+	// Compare the vectors entry by entry, remembering where each side is smaller.
 	var cells, lesser, greater []string
+
 	for _, p := range processes(a.Vector, b.Vector) {
 		x, y := a.Vector[p], b.Vector[p]
+
 		op := "="
+
 		switch {
 		case x < y:
 			op, lesser = "<", append(lesser, p)
 		case x > y:
 			op, greater = ">", append(greater, p)
 		}
+
 		cells = append(cells, fmt.Sprintf("%s: %d %s %d", p, x, op, y))
 	}
+
 	steps := []string{
 		fmt.Sprintf("Vector of %s is %s; vector of %s is %s.", a.ID, formatVec(a.Vector), b.ID, formatVec(b.Vector)),
 		"Compared entry by entry (" + a.ID + " vs " + b.ID + "): " + strings.Join(cells, "; ") + ".",
 	}
+
+	// The conclusion depends on the relation.
 	switch rel {
 	case clock.Before:
 		steps = append(steps, fmt.Sprintf("Every entry of %s is ≤ the matching entry of %s, and it is strictly smaller in %s. So %s happened before %s.",
@@ -219,11 +260,14 @@ func proof(a, b events.ClockEvent, rel clock.Order) []string {
 	case clock.Equal:
 		steps = append(steps, "The vectors are identical.")
 	}
+
 	return steps
 }
 
+// lamportNote says what the Lamport scalars suggest and whether that is right.
 func lamportNote(c Comparison) []string {
 	var cmp string
+
 	switch c.LamportSays {
 	case "before":
 		cmp = fmt.Sprintf("%d < %d", c.LamportA, c.LamportB)
@@ -232,6 +276,7 @@ func lamportNote(c Comparison) []string {
 	default:
 		cmp = fmt.Sprintf("%d = %d", c.LamportA, c.LamportB)
 	}
+
 	switch {
 	case c.A == c.B:
 		return nil
@@ -241,29 +286,37 @@ func lamportNote(c Comparison) []string {
 	case c.Relation == clock.Concurrent:
 		return []string{fmt.Sprintf("Lamport gives the tie %s, which happens to avoid claiming an order, but it cannot tell \"concurrent\" from \"tied\" in general.", cmp)}
 	}
+
 	return []string{fmt.Sprintf("Lamport agrees (%s).", cmp)}
 }
 
+// relationWord names what the events really are when Lamport misleads.
 func relationWord(r clock.Order) string {
 	if r == clock.Concurrent {
 		return "concurrent"
 	}
+
 	return "ordered the other way"
 }
 
+// joinOr joins process ids with commas, or says "no entry" when there are none.
 func joinOr(ps []string) string {
 	if len(ps) == 0 {
 		return "no entry"
 	}
+
 	return strings.Join(ps, ", ")
 }
 
+// formatVec renders a vector as {P1=2, P2=0}, with processes sorted.
 func formatVec(v clock.Vector) string {
 	ps := processes(v, nil)
+
 	parts := make([]string, len(ps))
 	for i, p := range ps {
 		parts[i] = fmt.Sprintf("%s=%d", p, v[p])
 	}
+
 	return "{" + strings.Join(parts, ", ") + "}"
 }
 
@@ -271,44 +324,62 @@ func formatVec(v clock.Vector) string {
 // It is a second, independent justification of "happened-before": the vector
 // verdict says it must exist, this shows it.
 func path(evs []events.ClockEvent, from, to string) []string {
+	// Index the events so edges can be followed quickly.
 	byID := map[string]events.ClockEvent{}
 	byPos := map[string]string{} // "process#seq" -> id
 	recvByMsg := map[string]string{}
+
 	for _, e := range evs {
 		byID[e.ID] = e
 		byPos[fmt.Sprintf("%s#%d", e.Process, e.Seq)] = e.ID
+
 		if e.Kind == events.Receive {
 			recvByMsg[e.MsgID] = e.ID
 		}
 	}
+
+	// next lists the events directly after id: the node's next step, and for a send,
+	// its matching receive.
 	next := func(id string) []string {
 		e := byID[id]
+
 		var out []string
+
 		if n, ok := byPos[fmt.Sprintf("%s#%d", e.Process, e.Seq+1)]; ok {
 			out = append(out, n)
 		}
+
 		if e.Kind == events.Send {
 			if r, ok := recvByMsg[e.MsgID]; ok {
 				out = append(out, r)
 			}
 		}
+
 		return out
 	}
+
+	// Breadth-first search from `from`, remembering how each event was reached.
 	prev := map[string]string{from: ""}
 	queue := []string{from}
+
 	for len(queue) > 0 {
 		cur := queue[0]
 		queue = queue[1:]
+
+		// Found it: walk back to the start, then reverse into forward order.
 		if cur == to {
 			var rev []string
 			for n := to; n != ""; n = prev[n] {
 				rev = append(rev, n)
 			}
+
 			for i, j := 0, len(rev)-1; i < j; i, j = i+1, j-1 {
 				rev[i], rev[j] = rev[j], rev[i]
 			}
+
 			return rev
 		}
+
 		for _, n := range next(cur) {
 			if _, seen := prev[n]; !seen {
 				prev[n] = cur
@@ -316,5 +387,6 @@ func path(evs []events.ClockEvent, from, to string) []string {
 			}
 		}
 	}
+
 	return nil
 }

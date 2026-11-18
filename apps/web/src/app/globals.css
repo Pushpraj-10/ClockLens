@@ -27,12 +27,10 @@
   --primary: #15151a;
   --primary-ink: #ffffff;
   --accent: #d13a05;
-  --accent-text: #ffffff;
   --info: #2457d6;
   --ok: #18853f;
   --bad: #d92d20;
   --warn: #a15c00;
-  --arrow: #6b6b76;
   --dot-text: #ffffff;
   --lane-band: rgba(21, 21, 26, 0.035);
   --shadow: 0 1px 2px rgba(20, 20, 30, 0.04), 0 10px 30px -18px rgba(20, 20, 30, 0.18);
@@ -63,12 +61,10 @@
   --primary: #f08a3c;
   --primary-ink: #1c0e03;
   --accent: #ffa14f;
-  --accent-text: #1c0e03;
   --info: #86adff;
   --ok: #3ecf8e;
   --bad: #ff6b6b;
   --warn: #f0b45a;
-  --arrow: #9b9ba3;
   --dot-text: #0b0b0c;
   --lane-band: rgba(255, 255, 255, 0.025);
   --shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 18px 40px -24px rgba(0, 0, 0, 0.9);
@@ -94,12 +90,10 @@
   --color-primary: var(--primary);
   --color-primary-ink: var(--primary-ink);
   --color-accent: var(--accent);
-  --color-accent-ink: var(--accent-text);
   --color-info: var(--info);
   --color-ok: var(--ok);
   --color-bad: var(--bad);
   --color-warn: var(--warn);
-  --color-arrow: var(--arrow);
   --color-dot-ink: var(--dot-text);
   --color-band: var(--lane-band);
   --shadow-panel: var(--shadow);
@@ -243,10 +237,6 @@
   /* an event id or clock value, set in mono */
   .chip {
     @apply inline-flex items-center rounded-md border border-line bg-surface px-1.5 font-mono text-[12px] leading-5 whitespace-nowrap text-ink;
-  }
-  .tile {
-    @apply flex flex-col gap-1 rounded-card border border-line bg-panel p-4 shadow-panel;
-    background-image: var(--card-glow);
   }
 }
 

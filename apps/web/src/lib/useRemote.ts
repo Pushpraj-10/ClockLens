@@ -16,11 +16,15 @@ export function useRemote<T>(key: string | undefined, version: string, load: () 
   const [state, setState] = useState<Remote<T> & { for?: string }>({});
 
   useEffect(() => {
+    // Nothing to load: clear any previous answer.
     if (key === undefined) {
       setState({});
+
       return;
     }
+
     let stale = false;
+
     load().then(
       (data) => {
         if (!stale) setState({ data, for: key });
@@ -29,9 +33,12 @@ export function useRemote<T>(key: string | undefined, version: string, load: () 
         if (!stale) setState({ error: e instanceof Error ? e.message : String(e), for: key });
       },
     );
+
+    // The key or version changed (or we unmounted): ignore the answer still in flight.
     return () => {
       stale = true;
     };
+
     // `load` is recreated every render; key + version fully describe the request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, version]);

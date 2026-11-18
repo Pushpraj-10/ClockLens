@@ -27,15 +27,19 @@ func New() *Store {
 func (s *Store) Add(e events.ClockEvent) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	return s.addLocked(e)
 }
 
+// addLocked is Add for callers that already hold s.mu.
 func (s *Store) addLocked(e events.ClockEvent) bool {
 	if _, dup := s.ids[e.ID]; dup {
 		return false
 	}
+
 	s.ids[e.ID] = struct{}{}
 	s.events = append(s.events, e)
+
 	return true
 }
 
@@ -43,6 +47,7 @@ func (s *Store) addLocked(e events.ClockEvent) bool {
 func (s *Store) All() []events.ClockEvent {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	return append([]events.ClockEvent{}, s.events...)
 }
 
@@ -50,6 +55,7 @@ func (s *Store) All() []events.ClockEvent {
 func (s *Store) Reset() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	s.events = nil
 	s.ids = map[string]struct{}{}
 }
@@ -62,21 +68,27 @@ func (s *Store) Replace(evs []events.ClockEvent) error {
 			return err
 		}
 	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	s.events = nil
 	s.ids = map[string]struct{}{}
+
 	for _, e := range evs {
 		s.addLocked(e)
 	}
+
 	return nil
 }
 
 // Marshal encodes events as an indented JSON array (the trace export format).
 func Marshal(evs []events.ClockEvent) ([]byte, error) {
+	// Encode "no events" as [] rather than null.
 	if evs == nil {
 		evs = []events.ClockEvent{}
 	}
+
 	return json.MarshalIndent(evs, "", "  ")
 }
 
@@ -86,10 +98,12 @@ func Parse(data []byte) ([]events.ClockEvent, error) {
 	if err := json.Unmarshal(data, &evs); err != nil {
 		return nil, fmt.Errorf("trace: %w", err)
 	}
+
 	for _, e := range evs {
 		if err := e.Validate(); err != nil {
 			return nil, err
 		}
 	}
+
 	return evs, nil
 }

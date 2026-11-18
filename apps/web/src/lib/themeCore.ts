@@ -13,6 +13,7 @@ export function parseTheme(raw: string | null | undefined): ThemeChoice {
 /** The theme that is actually shown. */
 export function resolveTheme(choice: ThemeChoice, systemDark: boolean): ResolvedTheme {
   if (choice === "system") return systemDark ? "dark" : "light";
+
   return choice;
 }
 

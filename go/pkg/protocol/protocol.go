@@ -5,16 +5,25 @@ package protocol
 
 const (
 	SubjectHello = "nodes.hello"
+
 	// SubjectDiscover is published by a (re)started server; every node answers with
 	// a hello and its current status, so the server learns who exists.
 	SubjectDiscover = "nodes.discover"
-	EventsWildcard  = "events.>"
-	StatusWildcard  = "status.>"
+
+	EventsWildcard = "events.>"
+	StatusWildcard = "status.>"
 )
 
-func InboxSubject(id string) string  { return "node." + id + ".inbox" }
-func CtlSubject(id string) string    { return "node." + id + ".ctl" }
+// InboxSubject is where a node receives application messages from other nodes.
+func InboxSubject(id string) string { return "node." + id + ".inbox" }
+
+// CtlSubject is where a node receives commands from the server.
+func CtlSubject(id string) string { return "node." + id + ".ctl" }
+
+// EventsSubject is where a node publishes its clock events.
 func EventsSubject(id string) string { return "events." + id }
+
+// StatusSubject is where a node publishes its non-clock status.
 func StatusSubject(id string) string { return "status." + id }
 
 // AppMessage is an application message between nodes. Lamport and Vector are the
@@ -48,6 +57,7 @@ func (t CommandType) Valid() bool {
 	case CmdLocal, CmdSend, CmdDeliver, CmdDrop, CmdSetMode, CmdSetPartition, CmdReset, CmdStop:
 		return true
 	}
+
 	return false
 }
 
@@ -72,6 +82,7 @@ type Command struct {
 // asks nodes to announce themselves.
 type Hello struct {
 	ID string `json:"id"`
+
 	// Started is true only when the node process has just started, with fresh clocks.
 	// A server that already knew this node must then start a new run: the node's old
 	// clocks are gone, so its events could no longer continue the previous history.

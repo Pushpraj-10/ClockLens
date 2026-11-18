@@ -19,6 +19,7 @@ export function parseMode(raw: string | null | undefined): ViewMode {
 export function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
   const [mode, setModeState] = useState<ViewMode>("simple");
 
+  // Apply the saved choice once, after the first render.
   useEffect(() => {
     try {
       setModeState(parseMode(window.localStorage.getItem(KEY)));
@@ -29,6 +30,7 @@ export function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
 
   const setMode = useCallback((next: ViewMode) => {
     setModeState(next);
+
     try {
       window.localStorage.setItem(KEY, next);
     } catch {

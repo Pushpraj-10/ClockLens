@@ -8,9 +8,11 @@ type Vector map[string]uint64
 // Copy returns an independent copy of v.
 func (v Vector) Copy() Vector {
 	out := make(Vector, len(v))
+
 	for k, n := range v {
 		out[k] = n
 	}
+
 	return out
 }
 
@@ -27,20 +29,27 @@ const (
 // Compare relates two vectors (missing keys count as 0).
 func Compare(x, y Vector) Order {
 	xLess, yLess := false, false
+
+	// check records which side is smaller at key k.
 	check := func(k string) {
 		a, b := x[k], y[k]
+
 		if a < b {
 			xLess = true
 		} else if a > b {
 			yLess = true
 		}
 	}
+
+	// Visit every key of both vectors; a key missing from one side counts as 0.
 	for k := range x {
 		check(k)
 	}
+
 	for k := range y {
 		check(k)
 	}
+
 	switch {
 	case xLess && yLess:
 		return Concurrent
@@ -52,9 +61,6 @@ func Compare(x, y Vector) Order {
 		return Equal
 	}
 }
-
-// HappenedBefore reports whether the event stamped x happened-before the one stamped y.
-func HappenedBefore(x, y Vector) bool { return Compare(x, y) == Before }
 
 // AreConcurrent reports whether neither event happened-before the other.
 func AreConcurrent(x, y Vector) bool { return Compare(x, y) == Concurrent }
@@ -75,9 +81,11 @@ type VectorClock struct {
 // entries so snapshots list every process.
 func NewVectorClock(self string, processes ...string) *VectorClock {
 	v := Vector{self: 0}
+
 	for _, p := range processes {
 		v[p] = 0
 	}
+
 	return &VectorClock{self: self, v: v}
 }
 
@@ -85,6 +93,7 @@ func NewVectorClock(self string, processes ...string) *VectorClock {
 func (c *VectorClock) Snapshot() Vector {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
 	return c.v.Copy()
 }
 
@@ -92,6 +101,7 @@ func (c *VectorClock) Snapshot() Vector {
 func (c *VectorClock) Tick() Vector {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
 	return c.tick()
 }
 
@@ -99,15 +109,20 @@ func (c *VectorClock) Tick() Vector {
 func (c *VectorClock) Receive(remote Vector) Vector {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	// Take the larger counter for every process.
 	for p, n := range remote {
 		if n > c.v[p] {
 			c.v[p] = n
 		}
 	}
+
 	return c.tick()
 }
 
+// tick increments this process's own counter. The caller must hold c.mu.
 func (c *VectorClock) tick() Vector {
 	c.v[c.self]++
+
 	return c.v.Copy()
 }

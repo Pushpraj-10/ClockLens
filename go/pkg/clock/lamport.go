@@ -17,6 +17,7 @@ type Lamport struct {
 func (l *Lamport) Value() uint64 {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+
 	return l.t
 }
 
@@ -24,7 +25,9 @@ func (l *Lamport) Value() uint64 {
 func (l *Lamport) Tick() uint64 {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+
 	l.t++
+
 	return l.t
 }
 
@@ -36,7 +39,8 @@ func (l *Lamport) Receive(remote uint64) uint64 {
 	if remote > l.t {
 		l.t = remote
 	}
-	
+
 	l.t++
+
 	return l.t
 }

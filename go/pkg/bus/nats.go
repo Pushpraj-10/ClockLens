@@ -15,26 +15,32 @@ type NATS struct {
 // ConnectNATS connects to url, retrying for up to wait so services can start in any order.
 func ConnectNATS(url string, wait time.Duration) (*NATS, error) {
 	deadline := time.Now().Add(wait)
+
 	for {
 		c, err := nats.Connect(url, nats.MaxReconnects(-1), nats.ReconnectWait(500*time.Millisecond))
 		if err == nil {
 			return &NATS{conn: c}, nil
 		}
+
 		if time.Now().After(deadline) {
 			return nil, fmt.Errorf("connect %s: %w", url, err)
 		}
+
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
+// Publish sends data to subject.
 func (n *NATS) Publish(subject string, data []byte) error {
 	return n.conn.Publish(subject, data)
 }
 
+// Subscribe calls h for every message on subject until the subscription is closed.
 func (n *NATS) Subscribe(subject string, h Handler) (Subscription, error) {
 	return n.conn.Subscribe(subject, func(m *nats.Msg) { h(m.Subject, m.Data) })
 }
 
+// Close drains pending messages and closes the connection.
 func (n *NATS) Close() {
 	_ = n.conn.Drain()
 }
