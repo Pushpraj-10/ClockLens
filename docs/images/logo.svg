@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ClockLens logo">
+  <rect width="128" height="128" rx="30" fill="#0a0a0b"/>
+  <circle cx="64" cy="64" r="38" fill="none" stroke="#ffa14f" stroke-width="8"/>
+  <path d="M64 38v26l18 11" fill="none" stroke="#ffa14f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="64" cy="64" r="6.5" fill="#ffa14f"/>
+</svg>

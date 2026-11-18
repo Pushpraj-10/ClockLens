@@ -1,6 +1,10 @@
-# ClockLens
+<p align="center">
+  <img src="docs/images/logo.svg" alt="ClockLens logo" width="112" height="112">
+</p>
 
-**See what caused what in a distributed system.**
+<h1 align="center">ClockLens</h1>
+
+<p align="center"><strong>See what caused what in a distributed system.</strong></p>
 
 ClockLens is an interactive visualizer for Lamport and vector clocks. You drive real
 nodes from a web UI — trigger local events, send messages, hold or drop them, cut links
